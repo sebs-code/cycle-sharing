@@ -10,7 +10,7 @@
 -author("Incerto").
 
 %% API
--export([start/0, init/1, loop/1, stop/0, write/2, delete/1, read/1, match/1]).
+-export([start/0, init/1, loop/1, stop/0, write/2, delete/1, read/1]).
 
 % DB Functions / API
 start() ->
@@ -55,10 +55,11 @@ delete(Key) ->
 
 read(Key) ->
   my_db ! {read, Key},
-%%  receive
-%%    {ok, Element} -> Element
-%%  end.
+  receive
+    {ok, Element} -> Element
+  end.
 
-match(Element) ->
-  my_db ! {match, Element}.
+%%
+%%match(Element) ->
+%%  my_db ! {match, Element}.
 
