@@ -18,9 +18,30 @@
 
 %% @doc start a new docking station FSM.
 start_link(Total, Occupied, Name) ->
-  Pid = spawn(docking, idle, [Total, Occupied, Name]),
-  register(Name, Pid),
-  {ok, Pid}.
+  if
+    %% Check for logical errors in Total and Occupied inputs.
+    Total < Occupied ->
+      io:format('{error, occupied greater than total}~n');
+    Total < 0 ->
+      io:format('{error, total cannot be negative}~n');
+    Occupied < 0 ->
+      io:format('{error, occupied cannot be negetive}~n');
+
+    %% Determine initial state
+    Occupied == Total ->
+      Pid = spawn(docking, full, [Total, Occupied, Name]),
+      register(Name, Pid),
+      {ok, Pid};
+    Occupied == 0 ->
+      Pid = spawn(docking, empty, [Total, Occupied, Name]),
+      register(Name, Pid),
+      {ok, Pid};
+    (Occupied < Total) and (Occupied > 0) ->
+      Pid = spawn(docking, idle, [Total, Occupied, Name]),
+      register(Name, Pid),
+      {ok, Pid}
+  end.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
