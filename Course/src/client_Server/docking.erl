@@ -17,6 +17,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc start a new docking station FSM.
+-spec start_link(Total :: non_neg_integer(), Occupied :: non_neg_integer(), Name :: atom()) -> state.
 start_link(Total, Occupied, Name) ->
   if
     %% Check for logical errors in Total and Occupied inputs.
@@ -49,6 +50,7 @@ start_link(Total, Occupied, Name) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc The Idle state.
+-spec idle(Total :: non_neg_integer(), Occupied :: non_neg_integer(), Name :: atom()) -> state.
 idle(Total, Occupied, Name) ->
   receive
     secure ->
@@ -67,6 +69,7 @@ idle(Total, Occupied, Name) ->
   end.
 
 %% @doc The Empty state.
+-spec empty(Total :: non_neg_integer(), Occupied :: non_neg_integer(), Name :: atom()) -> state.
 empty(Total, Occupied, Name) ->
   receive
     secure ->
@@ -80,6 +83,7 @@ empty(Total, Occupied, Name) ->
   end.
 
 %% @doc The Full state.
+-spec full(Total :: non_neg_integer(), Occupied :: non_neg_integer(), Name :: atom()) -> state.
 full(Total, Occupied, Name) ->
   receive
     secure ->
@@ -98,9 +102,11 @@ full(Total, Occupied, Name) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc Secure a moped to the docking station (if possible).
+-spec secure(Name :: atom()) -> message.
 secure(Name) -> Name ! secure, ok.
 
 %% @doc Release a moped to the docking station (if possible).
+-spec release(Name :: atom()) -> message.
 release(Name) -> Name ! release, ok.
 
 
@@ -109,9 +115,11 @@ release(Name) -> Name ! release, ok.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc The get_info API call.
+-spec get_info(Name :: atom()) -> info.
 get_info(Name) -> Name ! get_info.
 
 %% @doc Format the output for the get_info api call.
+-spec return_info(Total :: non_neg_integer(), Occupied :: non_neg_integer(), Name :: atom()) -> io.
 return_info(Total, Occupied, Name) ->
   Free = Total - Occupied,
   io:format('{~p, [{total, ~p}, {occupied, ~p}, {free, ~p}]}~n', [Name, Total, Occupied, Free]).
