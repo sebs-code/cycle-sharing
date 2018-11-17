@@ -10,7 +10,7 @@
 -author("Incerto").
 
 %% API
--export([start_link/3, release_moped/1, secure_moped/1, get_info/1]).
+-export([start_link/3, get_info/1]).
 
 %% Helper functions
 -export([init/1, loop/1]).
@@ -22,7 +22,7 @@
 
 %% @doc start a new docking station.
 start_link(Total, Occupied, Name) ->
-  Docking_Db = docking_db:new(Name, Total, Occupied),
+  Docking_Db = docking_db:new(Total, Occupied, Name),
   init(Docking_Db).
 
 %% @doc release a moped from a docking station.
@@ -35,7 +35,7 @@ secure_moped(Name) ->
 
 %% @doc release a moped from a docking station.
 get_info(Name) ->
-  docking ! {read, Name}.
+  docking ! {get_info, Name}.
 
 
 
@@ -52,17 +52,12 @@ init(Docking_Db) ->
 %% @doc loop pattern for message parsing.
 loop(Docking_Db) ->
   receive
-    new ->
-      docking_db:new(),
+    {get_info, Name} ->
+      docking_db:get_info(self(), Name, Docking_Db),
       loop(Docking_Db);
-    {write, Key, Element} ->
-      docking_db:write({Key, Element}, Docking_Db),
+    {reply, Message} ->
+      io:format('~w~n', [Message]),
       loop(Docking_Db);
-    {delete, Key} ->
-      docking_db:delete(Key, [{Key, Key}|Docking_Db]),
-      loop(Docking_Db);
-    {read, Key} ->
-      docking_db:read(Key, Docking_Db);
     stop ->
       true
   end.
