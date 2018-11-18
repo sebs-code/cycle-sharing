@@ -170,11 +170,9 @@ return_info(Total, Occupied, Name) ->
 %% @doc Format the output for the find_moped api call.
 -spec find_moped(Name :: atom()) -> io.
 return_find_moped(Name) ->
-  MopedReplyList = [],
-  {ok, MopedReplyList}.
+  ok.
 
 %% @doc Format the output for the find_docking_point api call.
 -spec find_moped(Name :: atom()) -> io.
 return_find_docking_point(Name) ->
-  DockingReplyList = [],
-  {ok, DockingReplyList}.
+  ok.
