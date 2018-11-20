@@ -168,13 +168,21 @@ return_info(Total, Occupied, Name) ->
   io:format('{~p, [{total, ~p}, {occupied, ~p}, {free, ~p}]}~n', [Name, Total, Occupied, Free]).
 
 %% @doc Format the output for the find_moped api call.
--spec find_moped(Name :: atom()) -> io.
+-spec return_find_moped(Name :: atom()) -> io.
 return_find_moped(Name) ->
-  MopedReplyList = [],
-  {ok, MopedReplyList}.
+  MopedReplyQuery = [[DockName, Total, Occupied, (Total - Occupied)] || [DockName, Total, Occupied] <-
+    ets:match(docking_stations, {'_', '$1', '$2', '$3'}), Occupied > 0, DockName =/= Name],
+
+  %% Format List
+  MopedReplyList = [{lists:nth(1, X), [{total, lists:nth(2, X)}, {occupied, lists:nth(3, X)}, {free, (lists:nth(2, X) - lists:nth(3, X))}]} || X <- MopedReplyQuery],
+  io:format('{ok, ~p}~n', [MopedReplyList]).
 
 %% @doc Format the output for the find_docking_point api call.
--spec find_moped(Name :: atom()) -> io.
+-spec return_find_docking_point(Name :: atom()) -> io.
 return_find_docking_point(Name) ->
-  DockingReplyList = [],
-  {ok, DockingReplyList}.
+  DockingReplyQuery = [[DockName, Total, Occupied, (Total - Occupied)] || [DockName, Total, Occupied] <-
+    ets:match(docking_stations, {'_', '$1', '$2', '$3'}), Occupied < Total, DockName =/= Name],
+
+  %% Format List
+  DockingReplyList = [{lists:nth(1, X), [{total, lists:nth(2, X)}, {occupied, lists:nth(3, X)}, {free, (lists:nth(2, X) - lists:nth(3, X))}]} || X <- DockingReplyQuery],
+  io:format('{ok, ~p}~n', [DockingReplyList]).
