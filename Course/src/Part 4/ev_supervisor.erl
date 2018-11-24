@@ -21,20 +21,18 @@
 -spec start_link() -> {ok, pid}.
 start_link() ->
   Pid = spawn(ev_supervisor, init, []),
+  register(db, Pid),
   {ok, Pid}.
 
 %% @doc Start a new child (docking station) process
 -spec start_child(Total :: non_neg_integer(), Occupied :: non_neg_integer(), Name :: atom()) -> {ok, pid}.
 start_child(Total, Occupied, Name) ->
   Pid = spawn_link(docking, start_link, [Total, Occupied, Name]),
-  ets:insert(docking_stations, {Pid, Name, Total, Occupied}),
+  {dbprocess, db} ! {insert, Pid, Name, Total, Occupied},
   {ok, Pid}.
 
 %% @doc Supervisor callback
 init() ->
-  % ETS table to preserve state
-  ets:new(docking_stations, [set, public, named_table]),
-
   % Set loop
   process_flag(trap_exit, true),
   loop().
@@ -44,15 +42,16 @@ loop() ->
   receive
     {'EXIT', Pid, Reason} ->
       %% Get docking station state data
-      Name = ets:lookup_element(dockers, Pid, 2),
-      Occupied = ets:lookup_element(dockers, Pid, 3),
-      Total = ets:lookup_element(dockers, Pid, 4),
+      {dbprocess, db} ! {state_data, Pid},
 
-      %% Delete old row with Pid ID
-      ets:delete(docking_stations, Pid),
+      receive
+        {exit_data, Name, Occupied, Total} ->
+        %% Delete old row with Pid ID
+        {dbprocess, db} ! {delete, Pid},
 
-      %% Start new child in same state
-      start_child(Total, Occupied, Name),
+        %% Start new child in same state
+        start_child(Total, Occupied, Name)
+      end,
 
       %% loop
       loop()

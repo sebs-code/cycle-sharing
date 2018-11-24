@@ -62,19 +62,19 @@ idle(Total, Occupied, Name) ->
     secure ->
       if
         (Occupied + 1) == Total ->
-          ets:insert(docking_stations, {self(), Name, Total, Occupied + 1}),
+          {dbprocess, db} ! {insert, self(), Name, Total, Occupied + 1},
           full(Total, Occupied + 1, Name);
         (Occupied + 1) < Total ->
-          ets:insert(docking_stations, {self(), Name, Total, Occupied + 1}),
+          {dbprocess, db} ! {insert, self(), Name, Total, Occupied + 1},
           idle(Total, Occupied + 1, Name)
       end;
     release ->
       if
         (Occupied -1) == 0 ->
-          ets:insert(docking_stations, {self(), Name, Total, Occupied - 1}),
+          {dbprocess, db} ! {insert, self(), Name, Total, Occupied - 1},
           empty(Total, Occupied - 1, Name);
         (Occupied -1) > 0 ->
-          ets:insert(docking_stations, {self(), Name, Total, Occupied - 1}),
+          {dbprocess, db} ! {insert, self(), Name, Total, Occupied - 1},
           idle(Total, Occupied - 1, Name)
       end;
     get_info ->
@@ -94,7 +94,7 @@ idle(Total, Occupied, Name) ->
 empty(Total, Occupied, Name) ->
   receive
     secure ->
-      ets:insert(docking_stations, {self(), Name, Total, Occupied + 1}),
+      {dbprocess, db} ! {insert, self(), Name, Total, Occupied + 1},
       idle(Total, Occupied + 1, Name);
     release ->
       io:format('{error, empty}~n'),
@@ -118,7 +118,7 @@ full(Total, Occupied, Name) ->
       io:format('{error, full}~n'),
       full(Total, Occupied, Name);
     release ->
-      ets:insert(docking_stations, {self(), Name, Total, Occupied - 1}),
+      {dbprocess, db} ! {insert, self(), Name, Total, Occupied -1},
       idle(Total, Occupied - 1, Name);
     get_info ->
       return_info(Total, Occupied, Name),
@@ -170,19 +170,29 @@ return_info(Total, Occupied, Name) ->
 %% @doc Format the output for the find_moped api call.
 -spec return_find_moped(Name :: atom()) -> io.
 return_find_moped(Name) ->
-  MopedReplyQuery = [[DockName, Total, Occupied, (Total - Occupied)] || [DockName, Total, Occupied] <-
-    ets:match(docking_stations, {'_', '$1', '$2', '$3'}), Occupied > 0, DockName =/= Name],
+  {dbprocess, db} ! {find_moped, self(), Name},
 
-  %% Format List
-  MopedReplyList = [{lists:nth(1, X), [{total, lists:nth(2, X)}, {occupied, lists:nth(3, X)}, {free, (lists:nth(2, X) - lists:nth(3, X))}]} || X <- MopedReplyQuery],
-  io:format('{ok, ~p}~n', [MopedReplyList]).
+  % Get response list from DB
+  receive
+    [_] ->
+      MopedReplyQuery = [_],
+
+      %% Format List
+      MopedReplyList = [{lists:nth(1, X), [{total, lists:nth(2, X)}, {occupied, lists:nth(3, X)}, {free, (lists:nth(2, X) - lists:nth(3, X))}]} || X <- MopedReplyQuery],
+      io:format('{ok, ~p}~n', [MopedReplyList])
+  end.
 
 %% @doc Format the output for the find_docking_point api call.
 -spec return_find_docking_point(Name :: atom()) -> io.
 return_find_docking_point(Name) ->
-  DockingReplyQuery = [[DockName, Total, Occupied, (Total - Occupied)] || [DockName, Total, Occupied] <-
-    ets:match(docking_stations, {'_', '$1', '$2', '$3'}), Occupied < Total, DockName =/= Name],
+  {dbprocess, db} ! {find_dokcing_point, self(), Name},
 
-  %% Format List
-  DockingReplyList = [{lists:nth(1, X), [{total, lists:nth(2, X)}, {occupied, lists:nth(3, X)}, {free, (lists:nth(2, X) - lists:nth(3, X))}]} || X <- DockingReplyQuery],
-  io:format('{ok, ~p}~n', [DockingReplyList]).
+  % Get response list from DB
+  receive
+    [_] ->
+      DockingReplyQuery = [_],
+
+      %% Format List
+      DockingReplyList = [{lists:nth(1, X), [{total, lists:nth(2, X)}, {occupied, lists:nth(3, X)}, {free, (lists:nth(2, X) - lists:nth(3, X))}]} || X <- DockingReplyQuery],
+      io:format('{ok, ~p}~n', [DockingReplyList])
+  end.
