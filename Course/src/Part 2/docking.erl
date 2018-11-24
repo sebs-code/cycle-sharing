@@ -10,7 +10,7 @@
 -author("Incerto").
 
 %% API
--export([start_link/3, idle/3, empty/3, full/3, secure/1, release/1, get_info/1, return_info/3]).
+-export([start_link/3, idle/3, empty/3, full/3, secure_moped/1, release_moped/1, get_info/1, return_info/3]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Docking Station Prototype - Finite State Machine
@@ -116,12 +116,12 @@ full(Total, Occupied, Name) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc Secure a moped to the docking station (if possible).
--spec secure(Name :: atom()) -> message.
-secure(Name) -> Name ! secure, ok.
+-spec secure_moped(Name :: atom()) -> message.
+secure_moped(Name) -> Name ! secure, ok.
 
 %% @doc Release a moped to the docking station (if possible).
--spec release(Name :: atom()) -> message.
-release(Name) -> Name ! release, ok.
+-spec release_moped(Name :: atom()) -> message.
+release_moped(Name) -> Name ! release, ok.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
