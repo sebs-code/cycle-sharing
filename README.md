@@ -1,3 +1,3 @@
-# cycle-sharing
+# erlang-exercises
 
-A toy example of a cycle sharing / docking station that could be deploying across a network (e.g. cities) nationwide. Built it Erlang. 
+A collection of basic Erlang exercises I did as part of an Erlang course. 
